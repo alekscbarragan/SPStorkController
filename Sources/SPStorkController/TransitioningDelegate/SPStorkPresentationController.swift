@@ -58,8 +58,8 @@ class SPStorkPresentationController: UIPresentationController, UIGestureRecogniz
     private var afterReleaseDismissing: Bool = false
     
     private var topSpace: CGFloat {
-        let statusBarHeight: CGFloat = UIApplication.shared.statusBarFrame.height
-        return (statusBarHeight < 25) ? 30 : statusBarHeight
+        let safeTop = containerView?.safeAreaInsets.top ?? 0
+        return max(safeTop, 30)
     }
     
     private let alpha: CGFloat =  0.51
