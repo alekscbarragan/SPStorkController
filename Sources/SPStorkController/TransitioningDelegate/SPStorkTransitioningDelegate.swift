@@ -26,9 +26,8 @@ public final class SPStorkTransitioningDelegate: NSObject, UIViewControllerTrans
     
     public var swipeToDismissEnabled: Bool = true
     public var tapAroundToDismissEnabled: Bool = true
-    public var showCloseButton: Bool = false
     public var showIndicator: Bool = true
-    public var indicatorColor: UIColor = UIColor.init(red: 202/255, green: 201/255, blue: 207/255, alpha: 1)
+    public var indicatorColor: UIColor = UIColor(red: 202/255, green: 201/255, blue: 207/255, alpha: 1)
     public var hideIndicatorWhenScroll: Bool = false
     public var indicatorMode: SPStorkArrowMode = .auto
     public var customHeight: CGFloat? = nil
@@ -36,13 +35,11 @@ public final class SPStorkTransitioningDelegate: NSObject, UIViewControllerTrans
     public var cornerRadius: CGFloat = 10
     public var hapticMoments: [SPStorkHapticMoments] = [.willDismissIfRelease]
     public weak var storkDelegate: SPStorkControllerDelegate? = nil
-    public weak var confirmDelegate: SPStorkControllerConfirmDelegate? = nil
-    
+
     public func presentationController(forPresented presented: UIViewController, presenting: UIViewController?, source: UIViewController) -> UIPresentationController? {
         let controller = SPStorkPresentationController(presentedViewController: presented, presenting: presenting)
         controller.swipeToDismissEnabled = self.swipeToDismissEnabled
         controller.tapAroundToDismissEnabled = self.tapAroundToDismissEnabled
-        controller.showCloseButton = self.showCloseButton
         controller.showIndicator = self.showIndicator
         controller.indicatorColor = self.indicatorColor
         controller.hideIndicatorWhenScroll = self.hideIndicatorWhenScroll
@@ -53,7 +50,6 @@ public final class SPStorkTransitioningDelegate: NSObject, UIViewControllerTrans
         controller.hapticMoments = self.hapticMoments
         controller.transitioningDelegate = self
         controller.storkDelegate = self.storkDelegate
-        controller.confirmDelegate = self.confirmDelegate
         return controller
     }
     
