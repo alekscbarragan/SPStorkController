@@ -25,6 +25,7 @@ import UIKit
 class SPStorkPresentationController: UIPresentationController, UIGestureRecognizerDelegate {
     
     var swipeToDismissEnabled: Bool = true
+    var edgeSwipeToDismissEnabled: Bool = false
     var tapAroundToDismissEnabled: Bool = true
     var showIndicator: Bool = true
     var indicatorColor: UIColor = UIColor.init(red: 202/255, green: 201/255, blue: 207/255, alpha: 1)
@@ -37,6 +38,7 @@ class SPStorkPresentationController: UIPresentationController, UIGestureRecogniz
     var transitioningDelegate: SPStorkTransitioningDelegate?
     weak var storkDelegate: SPStorkControllerDelegate?
     var pan: UIPanGestureRecognizer?
+    var edgePan: UIScreenEdgePanGestureRecognizer?
     var tap: UITapGestureRecognizer?
     private var indicatorView = SPStorkIndicatorView()
     private var gradeView: UIView = UIView()
@@ -229,12 +231,21 @@ class SPStorkPresentationController: UIPresentationController, UIGestureRecogniz
             self.pan!.cancelsTouchesInView = false
             self.presentedViewController.view.addGestureRecognizer(self.pan!)
         }
+
+        if self.edgeSwipeToDismissEnabled {
+            self.edgePan = UIScreenEdgePanGestureRecognizer(target: self, action: #selector(self.handleEdgePan))
+            self.edgePan!.edges = .left
+            self.edgePan!.delegate = self
+            self.presentedViewController.view.addGestureRecognizer(self.edgePan!)
+        }
     }
     
     override func dismissalTransitionWillBegin() {
         super.dismissalTransitionWillBegin()
         guard let containerView = containerView else { return }
         self.startDismissing = true
+        self.pan?.isEnabled = false
+        self.edgePan?.isEnabled = false
         
         let initialFrame: CGRect = presentingViewController.isPresentedAsStork ? presentingViewController.view.frame : containerView.bounds
         
@@ -383,7 +394,59 @@ extension SPStorkPresentationController {
         }
     }
     
+    @objc func handleEdgePan(gestureRecognizer: UIScreenEdgePanGestureRecognizer) {
+        guard gestureRecognizer.isEqual(self.edgePan), self.edgeSwipeToDismissEnabled else { return }
+
+        switch gestureRecognizer.state {
+        case .began:
+            self.workGester = true
+            self.indicatorView.style = .line
+            self.presentingViewController.view.layer.removeAllAnimations()
+            self.presentingViewController.view.endEditing(true)
+            self.presentedViewController.view.endEditing(true)
+            gestureRecognizer.setTranslation(.zero, in: containerView)
+        case .changed:
+            self.workGester = true
+            let translation = gestureRecognizer.translation(in: presentedView)
+            self.updatePresentedViewForTranslation(inHorizontalDirection: translation.x)
+        case .ended:
+            self.workGester = false
+            let translation = gestureRecognizer.translation(in: presentedView).x
+            let velocity = gestureRecognizer.velocity(in: presentedView).x
+            let viewWidth = presentedView?.bounds.width ?? 400
+            let progress = translation / viewWidth
+
+            let toDefault = {
+                self.indicatorView.style = .arrow
+                UIView.animate(
+                    withDuration: 0.6,
+                    delay: 0,
+                    usingSpringWithDamping: 1,
+                    initialSpringVelocity: 1,
+                    options: [.curveEaseOut, .allowUserInteraction],
+                    animations: {
+                        self.snapshotView?.transform = .identity
+                        self.presentedView?.transform = .identity
+                        self.gradeView.alpha = self.alpha
+                    })
+            }
+
+            if progress > 0.35 || velocity > 600 {
+                self.dismissWithConfirmation(prepare: toDefault, completion: {
+                    self.storkDelegate?.didDismissStorkBySwipe?()
+                })
+            } else {
+                toDefault()
+            }
+        default:
+            break
+        }
+    }
+
     func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        // Always allow edge pan
+        if gestureRecognizer === self.edgePan { return true }
+        // Vertical pan: only allow if vertical-dominant
         if let gester = gestureRecognizer as? UIPanGestureRecognizer {
             let velocity = gester.velocity(in: self.presentedViewController.view)
             return abs(velocity.y) > abs(velocity.x)
@@ -459,10 +522,49 @@ extension SPStorkPresentationController {
             }
         }
     }
+
+    private func updatePresentedViewForTranslation(inHorizontalDirection translation: CGFloat) {
+        if self.startDismissing { return }
+
+        let elasticThreshold: CGFloat = 120
+        let translationFactor: CGFloat = 1 / 2
+
+        if translation >= 0 {
+            let translationForModal: CGFloat = {
+                if translation >= elasticThreshold {
+                    let frictionLength = translation - elasticThreshold
+                    let frictionTranslation = 30 * atan(frictionLength / 120) + frictionLength / 10
+                    return frictionTranslation + (elasticThreshold * translationFactor)
+                } else {
+                    return translation * translationFactor
+                }
+            }()
+
+            self.presentedView?.transform = CGAffineTransform(translationX: translationForModal, y: 0)
+
+            let scaleFactor = 1 + (translationForModal / 5000)
+            self.snapshotView?.transform = CGAffineTransform(scaleX: scaleFactor, y: scaleFactor)
+            let gradeFactor = 1 + (translationForModal / 7000)
+            self.gradeView.alpha = self.alpha - ((gradeFactor - 1) * 15)
+        } else {
+            self.presentedView?.transform = .identity
+        }
+
+        if self.edgeSwipeToDismissEnabled {
+            let viewWidth = presentedView?.bounds.width ?? 400
+            let afterRealseDismissing = (translation >= viewWidth * 0.35)
+            if afterRealseDismissing != self.afterReleaseDismissing {
+                self.afterReleaseDismissing = afterRealseDismissing
+                if self.hapticMoments.contains(.willDismissIfRelease) {
+                    self.feedbackGenerator.impactOccurred()
+                }
+            }
+        }
+    }
 }
 
 extension SPStorkPresentationController {
-    
+
     override func containerViewWillLayoutSubviews() {
         super.containerViewWillLayoutSubviews()
         guard let containerView = containerView else { return }

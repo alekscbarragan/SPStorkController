@@ -25,6 +25,7 @@ import UIKit
 public final class SPStorkTransitioningDelegate: NSObject, UIViewControllerTransitioningDelegate {
     
     public var swipeToDismissEnabled: Bool = true
+    public var edgeSwipeToDismissEnabled: Bool = false
     public var tapAroundToDismissEnabled: Bool = true
     public var showIndicator: Bool = true
     public var indicatorColor: UIColor = UIColor(red: 202/255, green: 201/255, blue: 207/255, alpha: 1)
@@ -39,6 +40,7 @@ public final class SPStorkTransitioningDelegate: NSObject, UIViewControllerTrans
     public func presentationController(forPresented presented: UIViewController, presenting: UIViewController?, source: UIViewController) -> UIPresentationController? {
         let controller = SPStorkPresentationController(presentedViewController: presented, presenting: presenting)
         controller.swipeToDismissEnabled = self.swipeToDismissEnabled
+        controller.edgeSwipeToDismissEnabled = self.edgeSwipeToDismissEnabled
         controller.tapAroundToDismissEnabled = self.tapAroundToDismissEnabled
         controller.showIndicator = self.showIndicator
         controller.indicatorColor = self.indicatorColor
