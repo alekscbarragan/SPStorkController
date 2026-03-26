@@ -21,6 +21,7 @@
 
 import UIKit
 
+@MainActor
 public class SPStorkSegue: UIStoryboardSegue {
     
     public var transitioningDelegate: SPStorkTransitioningDelegate?

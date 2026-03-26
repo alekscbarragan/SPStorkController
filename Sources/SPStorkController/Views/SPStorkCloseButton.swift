@@ -21,6 +21,7 @@
 
 import UIKit
 
+@MainActor
 open class SPStorkCloseButton: UIButton {
     
     let iconView = SPStorkCloseView()

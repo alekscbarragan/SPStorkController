@@ -21,6 +21,7 @@
 
 import UIKit
 
+@MainActor
 public final class SPStorkTransitioningDelegate: NSObject, UIViewControllerTransitioningDelegate {
     
     public var swipeToDismissEnabled: Bool = true

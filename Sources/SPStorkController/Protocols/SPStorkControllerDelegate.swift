@@ -21,7 +21,8 @@
 
 import UIKit
 
-@objc public protocol SPStorkControllerDelegate: class {
+@MainActor
+@objc public protocol SPStorkControllerDelegate: AnyObject {
     
     @objc optional func didDismissStorkBySwipe()
     

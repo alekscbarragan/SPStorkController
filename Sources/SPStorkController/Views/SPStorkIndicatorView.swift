@@ -21,6 +21,7 @@
 
 import UIKit
 
+@MainActor
 open class SPStorkIndicatorView: UIView {
     
     var style: Style = .line {

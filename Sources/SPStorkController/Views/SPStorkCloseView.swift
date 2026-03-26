@@ -21,6 +21,7 @@
 
 import UIKit
 
+@MainActor
 open class SPStorkCloseView: UIView {
     
     var color = UIColor.blue {

@@ -21,7 +21,8 @@
 
 import UIKit
 
-@objc public protocol SPStorkControllerConfirmDelegate: class {
+@MainActor
+@objc public protocol SPStorkControllerConfirmDelegate: AnyObject {
     
     var needConfirm: Bool { get }
     

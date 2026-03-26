@@ -21,6 +21,7 @@
 
 import UIKit
 
+@MainActor
 public enum SPStorkController {
     
     static public func scrollViewDidScroll(_ scrollView: UIScrollView) {

@@ -21,6 +21,7 @@
 
 import UIKit
 
+@MainActor
 final class SPStorkPresentingAnimationController: NSObject, UIViewControllerAnimatedTransitioning {
 
     func animateTransition(using transitionContext: UIViewControllerContextTransitioning) {

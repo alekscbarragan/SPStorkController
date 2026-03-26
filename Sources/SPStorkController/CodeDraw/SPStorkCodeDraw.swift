@@ -1,5 +1,6 @@
 import UIKit
 
+@MainActor
 class SPStorkCodeDraw : NSObject {
     
     private struct Cache {
